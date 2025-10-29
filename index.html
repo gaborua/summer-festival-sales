@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Ventas - Summer Festival</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .qr-box {
+            text-align: center;
+        }
+        .qr-placeholder {
+            width: 250px;
+            height: 250px;
+            margin: 20px auto;
+            background: #f0f0f0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #999;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        .message.show {
+            display: block;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎉 Summer Festival</h1>
+            <p>Registro de Ventas de Tickets</p>
+        </header>
+
+        <div class="content">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">📝 Registrar Venta</h2>
+                <form id="salesForm">
+                    <div class="form-group">
+                        <label for="teamLeader">Líder de Equipo *</label>
+                        <input type="text" id="teamLeader" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rrppName">Nombre del RRPP *</label>
+                        <input type="text" id="rrppName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ticketQuantity">Cantidad de Tickets *</label>
+                        <input type="number" id="ticketQuantity" min="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="receipt">Comprobante de Pago *</label>
+                        <input type="file" id="receipt" accept="image/*" required>
+                    </div>
+
+                    <button type="submit" id="submitBtn">Registrar Venta</button>
+                </form>
+
+                <div id="message" class="message"></div>
+            </div>
+
+            <div class="card qr-box">
+                <h2 style="margin-bottom: 20px;">💳 QR de Pago</h2>
+                <div class="qr-placeholder">
+                    <p>QR CODE<br>ZAS PAYMENTS</p>
+                </div>
+                <p style="color: #666; margin-top: 20px;">Escanea para realizar el pago</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('salesForm');
+        const message = document.getElementById('message');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Registrando...';
+
+            const formData = new FormData();
+            formData.append('team_leader', document.getElementById('teamLeader').value);
+            formData.append('rrpp_name', document.getElementById('rrppName').value);
+            formData.append('ticket_quantity', document.getElementById('ticketQuantity').value);
+            formData.append('receipt', document.getElementById('receipt').files[0]);
+
+            try {
+                const response = await fetch('/api/sales', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    message.className = 'message success show';
+                    message.textContent = '✅ Venta registrada exitosamente';
+                    form.reset();
+                } else {
+                    message.className = 'message error show';
+                    message.textContent = '❌ Error: ' + data.error;
+                }
+            } catch (error) {
+                message.className = 'message error show';
+                message.textContent = '❌ Error de conexión';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Registrar Venta';
+                setTimeout(() => message.classList.remove('show'), 5000);
+            }
+        });
+    </script>
+</body>
+</html>
