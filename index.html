@@ -100,6 +100,12 @@
             display: inline-block;
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
+        .qr-image {
+            width: 280px;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
         .qr-placeholder {
             width: 200px;
             height: 200px;
@@ -214,14 +220,15 @@
 
                 <!-- QR ARRIBA DEL COMPROBANTE -->
                 <div class="qr-section">
-                    <div class="qr-title">💳 Escanea para Pagar</div>
+                    <div class="qr-title">💳 Escanea para Pagar con ZAS</div>
                     <div class="qr-container">
-                        <div class="qr-placeholder">
-                            <div style="font-size: 60px;">📱</div>
-                            <p>QR ZAS</p>
-                        </div>
+                        <img src="/public/qr-zas.jpg" alt="QR ZAS Payment" class="qr-image">
                     </div>
-                    <div class="qr-info">Realiza tu pago y sube el comprobante abajo ↓</div>
+                    <div class="qr-info">
+                        <p style="margin-bottom: 5px;"><strong>ACHA VILLARROEL JUAN PABLO</strong></p>
+                        <p style="font-size: 0.85rem;">Cuenta: 6031280718</p>
+                        <p style="margin-top: 10px;">Realiza tu pago y sube el comprobante abajo ↓</p>
+                    </div>
                 </div>
 
                 <div class="form-group">
