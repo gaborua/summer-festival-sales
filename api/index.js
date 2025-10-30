@@ -9,10 +9,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Multer para memoria (Vercel no tiene filesystem)
+// Multer en memoria (Vercel no permite escribir en disco)
+// Nota: Vercel suele tener límite de payload ~4.5MB. Usamos 4MB por seguridad.
 const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 }
+    limits: { fileSize: 4 * 1024 * 1024 } // 4MB
 });
 
 // Supabase client
@@ -65,11 +66,16 @@ app.get('/api/stats', async (req, res) => {
 // Registrar nueva venta
 app.post('/api/sales', upload.single('receipt'), async (req, res) => {
     try {
-        const { team_leader, rrpp_name, ticket_quantity } = req.body;
+        const { team_leader, rrpp_name, ticket_quantity, city } = req.body;
         
         if (!team_leader || !rrpp_name || !ticket_quantity) {
             return res.status(400).json({ error: 'Todos los campos son obligatorios' });
         }
+
+        // Ciudad: si no viene, usar 'General' para compatibilidad
+        const cityValue = (typeof city === 'string' && city.trim().length > 0)
+            ? city.trim()
+            : 'General';
 
         const receiptFilename = req.file ? `receipt-${Date.now()}-${req.file.originalname}` : null;
         
@@ -79,6 +85,7 @@ app.post('/api/sales', upload.single('receipt'), async (req, res) => {
                 team_leader,
                 rrpp_name,
                 ticket_quantity: parseInt(ticket_quantity),
+                city: cityValue,
                 receipt_filename: receiptFilename
             }])
             .select();
@@ -91,7 +98,14 @@ app.post('/api/sales', upload.single('receipt'), async (req, res) => {
             message: 'Venta registrada exitosamente'
         });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        // Errores de Multer (p.ej. tamaño excedido)
+        if (error instanceof multer.MulterError) {
+            if (error.code === 'LIMIT_FILE_SIZE') {
+                return res.status(413).json({ error: 'El archivo es demasiado grande. Máximo 4MB.' });
+            }
+            return res.status(400).json({ error: `Error de carga: ${error.message}` });
+        }
+        res.status(500).json({ error: error.message || 'Error interno del servidor' });
     }
 });
 

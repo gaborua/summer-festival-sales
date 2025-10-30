@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Ventas - TARIJA | Summer Festival 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #E91E63 0%, #880E4F 50%, #4A148C 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 30px; }
+        .logo { font-size: 3.2rem; font-weight: 900; letter-spacing: 3px; text-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 5px; }
+        .subtitle { font-size: 1.1rem; font-weight: 700; opacity: 0.95; }
+        .city { font-size: 0.95rem; opacity: 0.9; margin-top: 6px; }
+        .card { background: white; padding: 35px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        h2 { color: #E91E63; font-size: 1.4rem; margin-bottom: 25px; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 0.95rem; }
+        input, select { width: 100%; padding: 14px 16px; border: 2px solid #f0f0f0; border-radius: 12px; font-size: 16px; transition: all 0.3s; background: #fafafa; }
+        input:focus { outline: none; border-color: #E91E63; background: white; box-shadow: 0 0 0 4px rgba(233, 30, 99, 0.1); }
+        .qr-section { background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%); padding: 25px; border-radius: 16px; margin-bottom: 25px; text-align: center; }
+        .qr-title { color: white; font-size: 1.1rem; font-weight: 800; margin-bottom: 12px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .qr-container { background: white; padding: 20px; border-radius: 12px; display: inline-block; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .qr-image { width: 280px; height: auto; display: block; border-radius: 8px; }
+        .qr-info { color: white; font-size: 0.9rem; margin-top: 12px; opacity: 0.95; }
+        button { width: 100%; padding: 18px; background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4); }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(233, 30, 99, 0.5); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .message { margin-top: 20px; padding: 16px; border-radius: 12px; text-align: center; display: none; font-weight: 600; }
+        .message.show { display: block; }
+        .message.success { background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%); color: white; }
+        .message.error { background: linear-gradient(135deg, #f44336 0%, #c62828 100%); color: white; }
+        .back-links { text-align:center; margin-top:18px; }
+        .back-links a { color:#fff; font-weight:700; text-decoration:underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">SUMMER</div>
+            <div class="subtitle">AÑO NUEVO 2026</div>
+            <div class="city">Sede: <strong>TARIJA</strong></div>
+        </header>
+
+        <div class="card">
+            <h2>📝 Registro de Venta de Tickets</h2>
+            <form id="salesForm">
+                <input type="hidden" id="city" value="Tarija">
+                <div class="form-group">
+                    <label for="teamLeader">👤 Team Leader *</label>
+                    <input type="text" id="teamLeader" placeholder="Ingrese el nombre del leader" required>
+                </div>
+                <div class="form-group">
+                    <label for="rrppName">🎯 Nombre del RRPP *</label>
+                    <input type="text" id="rrppName" placeholder="Ingresa el nombre del RRPP" required>
+                </div>
+                <div class="form-group">
+                    <label for="ticketQuantity">🎫 Cantidad de Tickets *</label>
+                    <input type="number" id="ticketQuantity" min="1" placeholder="¿Cuántos tickets?" required>
+                </div>
+
+                <div class="qr-section">
+                    <div class="qr-title">💳 Escanea para Pagar (Tarija)</div>
+                    <div class="qr-container">
+                        <img src="/qr-tarija.jpg" alt="QR Tarija" class="qr-image" onerror="this.onerror=null;this.src='/qr-zas.jpg'">
+                    </div>
+                    <div class="qr-info">
+                        <p style="margin-bottom: 5px;"><strong>ACHA VILLARROEL JUAN PABLO</strong></p>
+                        <p style="font-size: 0.85rem;">Cuenta: 6031280718</p>
+                        <p style="margin-top: 10px;">Realiza tu pago y sube el comprobante abajo ↓</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="receipt">📎 Comprobante de Pago *</label>
+                    <input type="file" id="receipt" accept="image/*,.pdf" required>
+                </div>
+
+                <button type="submit" id="submitBtn">✨ Registrar Venta</button>
+            </form>
+            <div id="message" class="message"></div>
+        </div>
+        <div class="back-links"><a href="/index.html">Volver a página principal</a></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('salesForm');
+        const message = document.getElementById('message');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Registrando...';
+            const formData = new FormData();
+            formData.append('team_leader', document.getElementById('teamLeader').value);
+            formData.append('rrpp_name', document.getElementById('rrppName').value);
+            formData.append('ticket_quantity', document.getElementById('ticketQuantity').value);
+            formData.append('city', document.getElementById('city').value);
+            formData.append('receipt', document.getElementById('receipt').files[0]);
+            try {
+                const response = await fetch('/api/sales', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (response.ok) {
+                    message.className = 'message success show';
+                    message.textContent = '✅ Venta registrada exitosamente (Tarija)';
+                    form.reset();
+                } else {
+                    message.className = 'message error show';
+                    message.textContent = '❌ Error: ' + data.error;
+                }
+            } catch (error) {
+                message.className = 'message error show';
+                message.textContent = '❌ Error de conexión';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Registrar Venta';
+                setTimeout(() => message.classList.remove('show'), 5000);
+            }
+        });
+    </script>
+</body>
+</html>
