@@ -135,6 +135,19 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(233, 30, 99, 0.5);
         }
+        .loading-indicator {
+            display: inline-block;
+            margin-left: 10px;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(233, 30, 99, 0.3);
+            border-top-color: #E91E63;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
         @media (max-width: 768px) {
             .logo {
                 font-size: 2.5rem;
@@ -156,13 +169,13 @@
             <div class="subtitle">📊 Dashboard de Ventas - Año Nuevo 2026</div>
         </header>
 
-        <div class="stats">
+        <div class="stats" role="region" aria-label="Estadísticas de ventas">
             <div class="stat-card">
-                <h3 id="totalSales">0</h3>
+                <h3 id="totalSales" aria-label="Total de ventas">0</h3>
                 <p>📝 Total Ventas</p>
             </div>
             <div class="stat-card">
-                <h3 id="totalTickets">0</h3>
+                <h3 id="totalTickets" aria-label="Total de tickets vendidos">0</h3>
                 <p>🎫 Total Tickets</p>
             </div>
         </div>
@@ -170,21 +183,26 @@
         <div class="table-card">
             <div class="table-header">
                 <h2>📋 Registro Completo</h2>
-                <button onclick="exportCSV()">📥 Exportar CSV</button>
+                <button onclick="exportCSV()" aria-label="Exportar datos a CSV">📥 Exportar CSV</button>
             </div>
-            <table>
+            <div role="search" style="margin-bottom: 20px;">
+                <input type="search" id="searchInput" placeholder="🔍 Buscar por nombre..." 
+                       style="width: 100%; padding: 12px; border: 2px solid #f0f0f0; border-radius: 8px; font-size: 16px;"
+                       aria-label="Buscar en la tabla de ventas">
+            </div>
+            <table role="table" aria-label="Tabla de registro de ventas">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Líder</th>
-                        <th>RRPP</th>
-                        <th>Tickets</th>
-                        <th>Fecha</th>
+                        <th scope="col">ID</th>
+                        <th scope="col">Líder</th>
+                        <th scope="col">RRPP</th>
+                        <th scope="col">Tickets</th>
+                        <th scope="col">Fecha</th>
                     </tr>
                 </thead>
                 <tbody id="salesTable">
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 40px;">Cargando ventas...</td>
+                        <td colspan="5" style="text-align: center; padding: 40px;" role="status" aria-live="polite">Cargando ventas...</td>
                     </tr>
                 </tbody>
             </table>
@@ -192,6 +210,8 @@
     </div>
 
     <script>
+        let allSales = [];
+
         async function loadData() {
             try {
                 const [salesRes, statsRes] = await Promise.all([
@@ -202,24 +222,12 @@
                 const sales = await salesRes.json();
                 const stats = await statsRes.json();
 
+                allSales = sales;
+
                 document.getElementById('totalSales').textContent = stats.totalSales || 0;
                 document.getElementById('totalTickets').textContent = stats.totalTickets || 0;
 
-                const tbody = document.getElementById('salesTable');
-                if (sales.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay ventas registradas</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = sales.map(sale => `
-                    <tr>
-                        <td>${sale.id}</td>
-                        <td>${sale.team_leader}</td>
-                        <td>${sale.rrpp_name}</td>
-                        <td>${sale.ticket_quantity}</td>
-                        <td>${new Date(sale.created_at).toLocaleString('es')}</td>
-                    </tr>
-                `).join('');
+                renderTable(sales);
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('salesTable').innerHTML = 
@@ -227,21 +235,53 @@
             }
         }
 
+        function renderTable(sales) {
+            const tbody = document.getElementById('salesTable');
+            if (sales.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay ventas registradas</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = sales.map(sale => `
+                <tr>
+                    <td>${sale.id}</td>
+                    <td>${sale.team_leader}</td>
+                    <td>${sale.rrpp_name}</td>
+                    <td>${sale.ticket_quantity}</td>
+                    <td>${new Date(sale.created_at).toLocaleString('es')}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredSales = allSales.filter(sale => 
+                sale.team_leader.toLowerCase().includes(searchTerm) ||
+                sale.rrpp_name.toLowerCase().includes(searchTerm)
+            );
+            renderTable(filteredSales);
+        });
+
         function exportCSV() {
-            fetch('/api/sales')
-                .then(res => res.json())
-                .then(sales => {
-                    let csv = 'ID,Líder,RRPP,Tickets,Fecha\n';
-                    sales.forEach(sale => {
-                        csv += `${sale.id},"${sale.team_leader}","${sale.rrpp_name}",${sale.ticket_quantity},"${new Date(sale.created_at).toLocaleString('es')}"\n`;
-                    });
-                    const blob = new Blob([csv], { type: 'text/csv' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'ventas.csv';
-                    a.click();
-                });
+            const visibleSales = searchInput.value ? 
+                allSales.filter(sale => 
+                    sale.team_leader.toLowerCase().includes(searchInput.value.toLowerCase()) ||
+                    sale.rrpp_name.toLowerCase().includes(searchInput.value.toLowerCase())
+                ) : allSales;
+
+            let csv = 'ID,Líder,RRPP,Tickets,Fecha\n';
+            visibleSales.forEach(sale => {
+                csv += `${sale.id},"${sale.team_leader}","${sale.rrpp_name}",${sale.ticket_quantity},"${new Date(sale.created_at).toLocaleString('es')}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ventas_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
         }
 
         loadData();

@@ -178,6 +178,30 @@
             background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
             color: white;
         }
+        .copy-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 8px;
+            transition: all 0.3s;
+        }
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+        input:invalid:not(:focus):not(:placeholder-shown) {
+            border-color: #f44336;
+        }
+        input:valid:not(:focus):not(:placeholder-shown) {
+            border-color: #4CAF50;
+        }
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -210,38 +234,40 @@
                 <a href="/sucre.html" style="margin:0 6px;color:#E91E63;font-weight:800;">Sucre</a>
             </div>
             
-            <form id="salesForm">
+            <form id="salesForm" aria-label="Formulario de registro de ventas">
                 <div class="form-group">
                     <label for="teamLeader">👤 Team Leader *</label>
-                    <input type="text" id="teamLeader" placeholder="Ingrese el nombre del leader" required>
+                    <input type="text" id="teamLeader" placeholder="Ingrese el nombre del leader" required aria-required="true" aria-label="Nombre del team leader" minlength="3">
                 </div>
 
                 <div class="form-group">
                     <label for="rrppName">🎯 Nombre del RRPP *</label>
-                    <input type="text" id="rrppName" placeholder="Ingresa el nombre del RRPP" required>
+                    <input type="text" id="rrppName" placeholder="Ingresa el nombre del RRPP" required aria-required="true" aria-label="Nombre del representante de relaciones públicas" minlength="3">
                 </div>
 
                 <div class="form-group">
                     <label for="ticketQuantity">🎫 Cantidad de Tickets *</label>
-                    <input type="number" id="ticketQuantity" min="1" placeholder="¿Cuántos tickets?" required>
+                    <input type="number" id="ticketQuantity" min="1" placeholder="¿Cuántos tickets?" required aria-required="true" aria-label="Cantidad de tickets a vender">
                 </div>
 
                 <!-- QR ARRIBA DEL COMPROBANTE -->
-                <div class="qr-section">
+                <div class="qr-section" role="region" aria-label="Información de pago">
                     <div class="qr-title">💳 Escanea para Pagar con ZAS</div>
                     <div class="qr-container">
-                        <img src="/qr-zas.jpg" alt="QR ZAS Payment" class="qr-image">
+                        <img src="/qr-zas.jpg" alt="Código QR para pago con ZAS a la cuenta de Juan Pablo Acha Villarroel" class="qr-image">
                     </div>
                     <div class="qr-info">
                         <p style="margin-bottom: 5px;"><strong>ACHA VILLARROEL JUAN PABLO</strong></p>
-                        <p style="font-size: 0.85rem;">Cuenta: 6031280718</p>
+                        <p style="font-size: 0.85rem;">Cuenta: <span id="accountNumber">6031280718</span> 
+                        <button type="button" onclick="copyAccountNumber()" class="copy-btn" aria-label="Copiar número de cuenta" title="Copiar al portapapeles">📋</button></p>
                         <p style="margin-top: 10px;">Realiza tu pago y sube el comprobante abajo ↓</p>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="receipt">� Comprobante de Pago *</label>
-                    <input type="file" id="receipt" accept="image/*,.pdf" required>
+                    <label for="receipt">📎 Comprobante de Pago *</label>
+                    <input type="file" id="receipt" accept="image/*,.pdf" required aria-required="true" aria-label="Archivo de comprobante de pago en formato imagen o PDF">
+                    <small style="display:block;margin-top:5px;color:#666;">Formatos aceptados: JPG, PNG, PDF. Tamaño máximo: 4MB</small>
                 </div>
 
                 <button type="submit" id="submitBtn">✨ Registrar Venta</button>
@@ -256,6 +282,43 @@
         const message = document.getElementById('message');
         const submitBtn = document.getElementById('submitBtn');
 
+        // Copy account number to clipboard
+        function copyAccountNumber() {
+            const accountNumber = document.getElementById('accountNumber').textContent;
+            navigator.clipboard.writeText(accountNumber).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✓';
+                btn.style.background = 'rgba(76, 175, 80, 0.3)';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Error al copiar:', err);
+            });
+        }
+
+        // Form validation
+        const teamLeader = document.getElementById('teamLeader');
+        const rrppName = document.getElementById('rrppName');
+        const ticketQuantity = document.getElementById('ticketQuantity');
+        const receipt = document.getElementById('receipt');
+
+        // File size validation
+        receipt.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const fileSize = file.size / 1024 / 1024; // Convert to MB
+                if (fileSize > 4) {
+                    message.className = 'message error show';
+                    message.textContent = '❌ El archivo es muy grande. Máximo 4MB';
+                    receipt.value = '';
+                    setTimeout(() => message.classList.remove('show'), 5000);
+                }
+            }
+        });
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -263,10 +326,10 @@
             submitBtn.textContent = '⏳ Registrando...';
 
             const formData = new FormData();
-            formData.append('team_leader', document.getElementById('teamLeader').value);
-            formData.append('rrpp_name', document.getElementById('rrppName').value);
-            formData.append('ticket_quantity', document.getElementById('ticketQuantity').value);
-            formData.append('receipt', document.getElementById('receipt').files[0]);
+            formData.append('team_leader', teamLeader.value.trim());
+            formData.append('rrpp_name', rrppName.value.trim());
+            formData.append('ticket_quantity', ticketQuantity.value);
+            formData.append('receipt', receipt.files[0]);
 
             try {
                 const response = await fetch('/api/sales', {
@@ -289,7 +352,7 @@
                 message.textContent = '❌ Error de conexión';
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Registrar Venta';
+                submitBtn.textContent = '✨ Registrar Venta';
                 setTimeout(() => message.classList.remove('show'), 5000);
             }
         });
