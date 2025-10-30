@@ -17,9 +17,11 @@ const upload = multer({
 });
 
 // Supabase client
+// Prefer service role on the server to bypass RLS for backend-only operations
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
+    SUPABASE_KEY
 );
 
 // Health check
