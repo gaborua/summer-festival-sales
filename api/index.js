@@ -16,6 +16,15 @@ const upload = multer({
     limits: { fileSize: 4 * 1024 * 1024 } // 4MB
 });
 
+// Helper para nombres de archivo seguros
+function sanitizeFilename(name) {
+    return name
+        .toLowerCase()
+        .replace(/[^a-z0-9\.\-]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+}
+
 // Supabase client
 // Prefer service role on the server to bypass RLS for backend-only operations
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
@@ -41,7 +50,19 @@ app.get('/api/sales', async (req, res) => {
             .order('created_at', { ascending: false });
         
         if (error) throw error;
-        res.json(data || []);
+        // Adjuntar URL pública del comprobante si existe
+        const withUrls = (data || []).map((row) => {
+            let receipt_url = null;
+            if (row.receipt_filename) {
+                const { data: pub } = supabase
+                    .storage
+                    .from('receipts')
+                    .getPublicUrl(row.receipt_filename);
+                receipt_url = pub?.publicUrl || null;
+            }
+            return { ...row, receipt_url };
+        });
+        res.json(withUrls);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -79,7 +100,47 @@ app.post('/api/sales', upload.single('receipt'), async (req, res) => {
             ? city.trim()
             : 'General';
 
-        const receiptFilename = req.file ? `receipt-${Date.now()}-${req.file.originalname}` : null;
+        let receiptFilename = null;
+        if (req.file) {
+            const ts = Date.now();
+            const safeName = sanitizeFilename(req.file.originalname || 'comprobante');
+            const storagePath = `${ts}-${safeName}`;
+
+            // Subir a Supabase Storage (bucket: receipts, público)
+            let uploadError;
+            const { error: upErr } = await supabase
+                .storage
+                .from('receipts')
+                .upload(storagePath, req.file.buffer, {
+                    contentType: req.file.mimetype || 'application/octet-stream',
+                    upsert: false
+                });
+            uploadError = upErr;
+
+            // Si falla por bucket inexistente, intentamos crearlo (requiere service role)
+            if (uploadError && /not found|No such file|bucket/i.test(uploadError.message || '')) {
+                try {
+                    await supabase.storage.createBucket('receipts', { public: true });
+                    const again = await supabase
+                        .storage
+                        .from('receipts')
+                        .upload(storagePath, req.file.buffer, {
+                            contentType: req.file.mimetype || 'application/octet-stream',
+                            upsert: false
+                        });
+                    if (again.error) throw again.error;
+                    uploadError = null;
+                } catch (e) {
+                    uploadError = e;
+                }
+            }
+
+            if (uploadError) {
+                return res.status(500).json({ error: `Error al subir comprobante: ${uploadError.message || uploadError}` });
+            }
+
+            receiptFilename = storagePath;
+        }
         
         const { data, error } = await supabase
             .from('sales')
