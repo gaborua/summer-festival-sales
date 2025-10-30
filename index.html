@@ -259,7 +259,7 @@
                     <div class="qr-info">
                         <p style="margin-bottom: 5px;"><strong>ACHA VILLARROEL JUAN PABLO</strong></p>
                         <p style="font-size: 0.85rem;">Cuenta: <span id="accountNumber">6031280718</span> 
-                        <button type="button" onclick="copyAccountNumber()" class="copy-btn" aria-label="Copiar número de cuenta" title="Copiar al portapapeles">📋</button></p>
+                        <button type="button" onclick="copyAccountNumber(event)" class="copy-btn" aria-label="Copiar número de cuenta" title="Copiar al portapapeles">📋</button></p>
                         <p style="margin-top: 10px;">Realiza tu pago y sube el comprobante abajo ↓</p>
                     </div>
                 </div>
@@ -283,7 +283,7 @@
         const submitBtn = document.getElementById('submitBtn');
 
         // Copy account number to clipboard
-        function copyAccountNumber() {
+        function copyAccountNumber(event) {
             const accountNumber = document.getElementById('accountNumber').textContent;
             navigator.clipboard.writeText(accountNumber).then(() => {
                 const btn = event.target;

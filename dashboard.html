@@ -271,7 +271,8 @@
                     sale.rrpp_name.toLowerCase().includes(searchInput.value.toLowerCase())
                 ) : allSales;
 
-            let csv = 'ID,Líder,RRPP,Tickets,Fecha\n';
+            let csv = '\ufeff'; // BOM for better Excel compatibility
+            csv += 'ID,Líder,RRPP,Tickets,Fecha\n';
             visibleSales.forEach(sale => {
                 csv += `${sale.id},"${sale.team_leader}","${sale.rrpp_name}",${sale.ticket_quantity},"${new Date(sale.created_at).toLocaleString('es')}"\n`;
             });
