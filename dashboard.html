@@ -39,9 +39,14 @@
 
         .table-wrap{overflow:auto;max-height:66vh;border-radius:12px}
         table{width:100%;border-collapse:separate;border-spacing:0;background:#fff}
-        col.id{width:70px} col.city{width:140px} col.tickets{width:110px} col.receipt{width:190px} col.date{width:190px}
+        col.id{width:70px} col.city{width:140px} col.tickets{width:110px} col.receipt{width:190px} col.date{width:190px} col.delivered{width:120px}
         thead th{position:sticky;top:0;z-index:1;background:linear-gradient(135deg,var(--pink) 0%, var(--magenta) 100%);color:white}
         th,td{padding:14px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:1rem}
+        td.delivered-cell{text-align:center}
+        .delivery-checkbox{width:20px;height:20px;cursor:pointer;accent-color:var(--success)}
+        .delivery-status{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700}
+        .status-delivered{color:var(--success)}
+        .status-pending{color:#ff9800}
         tbody tr:hover{background:var(--row-alt)}
         td.num{text-align:right;font-weight:900;font-variant-numeric:tabular-nums}
         .link{color:var(--link);font-weight:800;text-decoration:none}
@@ -102,6 +107,7 @@
                     <col class="tickets" />
                     <col class="receipt" />
                     <col class="date" />
+                    <col class="delivered" />
                 </colgroup>
                 <thead>
                     <tr>
@@ -112,10 +118,11 @@
                         <th>Tickets</th>
                         <th>Comprobante</th>
                         <th>Fecha</th>
+                        <th>Paquete</th>
                     </tr>
                 </thead>
                 <tbody id="salesTable">
-                    <tr><td colspan="7" style="text-align:center; padding:40px;">Cargando ventas...</td></tr>
+                    <tr><td colspan="8" style="text-align:center; padding:40px;">Cargando ventas...</td></tr>
                 </tbody>
             </table>
             </div>
@@ -144,7 +151,7 @@
                 applyFilters();
             } catch (err) {
                 console.error(err);
-                document.getElementById('salesTable').innerHTML = '<tr><td colspan="7" class="error">Error al cargar datos</td></tr>';
+                document.getElementById('salesTable').innerHTML = '<tr><td colspan="8" class="error">Error al cargar datos</td></tr>';
             }
         }
 
@@ -163,7 +170,7 @@
         function renderTable(sales) {
             const tbody = document.getElementById('salesTable');
             if (!Array.isArray(sales) || sales.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="empty">No hay ventas registradas</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="empty">No hay ventas registradas</td></tr>';
                     return;
                 }
 
@@ -176,15 +183,26 @@
                     <td class="num"><span class="pill pill-count">${sale.ticket_quantity}</span></td>
                     <td>${sale.receipt_url ? `<a class="link" href="${sale.receipt_url}" target="_blank" rel="noopener">📷 Ver comprobante</a>` : '<span style="color:#888">Sin comprobante</span>'}</td>
                         <td>${new Date(sale.created_at).toLocaleString('es')}</td>
+                        <td class="delivered-cell">
+                            <label class="delivery-status ${sale.package_delivered ? 'status-delivered' : 'status-pending'}">
+                                <input 
+                                    type="checkbox" 
+                                    class="delivery-checkbox" 
+                                    ${sale.package_delivered ? 'checked' : ''}
+                                    onchange="toggleDelivery(${sale.id}, this.checked)"
+                                />
+                                <span>${sale.package_delivered ? '✓ Entregado' : 'Pendiente'}</span>
+                            </label>
+                        </td>
                     </tr>
                 `).join('');
         }
 
         function exportCSV() {
             const sales = currentSales.length ? currentSales : allSales;
-            let csv = 'ID,Líder,RRPP,Ciudad,Tickets,ComprobanteURL,Fecha\n';
+            let csv = 'ID,Líder,RRPP,Ciudad,Tickets,ComprobanteURL,Fecha,PaqueteEntregado\n';
             sales.forEach(sale => {
-                csv += `${sale.id},"${sale.team_leader}","${sale.rrpp_name}","${sale.city || ''}",${sale.ticket_quantity},"${sale.receipt_url || ''}","${new Date(sale.created_at).toLocaleString('es')}"\n`;
+                csv += `${sale.id},"${sale.team_leader}","${sale.rrpp_name}","${sale.city || ''}",${sale.ticket_quantity},"${sale.receipt_url || ''}","${new Date(sale.created_at).toLocaleString('es')}","${sale.package_delivered ? 'Sí' : 'No'}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
@@ -216,6 +234,32 @@
         }
 
         function refresh() { loadData(); }
+
+        async function toggleDelivery(saleId, isDelivered) {
+            try {
+                const response = await fetch(`/api/sales/${saleId}/delivery`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ package_delivered: isDelivered })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al actualizar el estado de entrega');
+                }
+                
+                // Actualizar el estado local sin recargar toda la página
+                const saleIndex = allSales.findIndex(s => s.id === saleId);
+                if (saleIndex !== -1) {
+                    allSales[saleIndex].package_delivered = isDelivered;
+                    applyFilters();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al actualizar el estado de entrega. Por favor, intenta de nuevo.');
+                // Revertir el checkbox
+                loadData();
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             loadData();

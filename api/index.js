@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -8,10 +9,11 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '../')));
 
 // Multer en memoria (Vercel no permite escribir en disco)
 // Nota: Vercel suele tener límite de payload ~4.5MB. Usamos 4MB por seguridad.
-const upload = multer({ 
+const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 4 * 1024 * 1024 } // 4MB
 });
@@ -35,7 +37,7 @@ const supabase = createClient(
 
 // Health check
 app.get('/api/health', (req, res) => {
-    res.json({ 
+    res.json({
         status: 'OK',
         timestamp: new Date().toISOString()
     });
@@ -48,7 +50,7 @@ app.get('/api/sales', async (req, res) => {
             .from('sales')
             .select('*')
             .order('created_at', { ascending: false });
-        
+
         if (error) throw error;
         // Adjuntar URL pública del comprobante si existe
         const withUrls = (data || []).map((row) => {
@@ -74,12 +76,12 @@ app.get('/api/stats', async (req, res) => {
         const { data, error } = await supabase
             .from('sales')
             .select('ticket_quantity');
-        
+
         if (error) throw error;
 
         const totalSales = data.length;
         const totalTickets = data.reduce((sum, sale) => sum + sale.ticket_quantity, 0);
-        
+
         res.json({ totalSales, totalTickets });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -90,7 +92,7 @@ app.get('/api/stats', async (req, res) => {
 app.post('/api/sales', upload.single('receipt'), async (req, res) => {
     try {
         const { team_leader, rrpp_name, ticket_quantity, city } = req.body;
-        
+
         if (!team_leader || !rrpp_name || !ticket_quantity) {
             return res.status(400).json({ error: 'Todos los campos son obligatorios' });
         }
@@ -141,7 +143,7 @@ app.post('/api/sales', upload.single('receipt'), async (req, res) => {
 
             receiptFilename = storagePath;
         }
-        
+
         const { data, error } = await supabase
             .from('sales')
             .insert([{
@@ -152,9 +154,9 @@ app.post('/api/sales', upload.single('receipt'), async (req, res) => {
                 receipt_filename: receiptFilename
             }])
             .select();
-        
+
         if (error) throw error;
-        
+
         res.json({
             success: true,
             id: data[0].id,
@@ -168,6 +170,38 @@ app.post('/api/sales', upload.single('receipt'), async (req, res) => {
             }
             return res.status(400).json({ error: `Error de carga: ${error.message}` });
         }
+        res.status(500).json({ error: error.message || 'Error interno del servidor' });
+    }
+});
+
+// Actualizar estado de entrega del paquete
+app.patch('/api/sales/:id/delivery', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { package_delivered } = req.body;
+
+        if (typeof package_delivered !== 'boolean') {
+            return res.status(400).json({ error: 'El campo package_delivered debe ser booleano' });
+        }
+
+        const { data, error } = await supabase
+            .from('sales')
+            .update({ package_delivered })
+            .eq('id', id)
+            .select();
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            return res.status(404).json({ error: 'Venta no encontrada' });
+        }
+
+        res.json({
+            success: true,
+            message: 'Estado de entrega actualizado',
+            data: data[0]
+        });
+    } catch (error) {
         res.status(500).json({ error: error.message || 'Error interno del servidor' });
     }
 });
