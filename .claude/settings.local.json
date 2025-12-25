@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nUpdate QR codes with new expiration dates for all cities\n\n- Updated all 5 city QR codes with new expiration dates\n- Cochabamba, La Paz, Santa Cruz: 11/Nov/2026\n- Sucre, Tarija: 08/Nov/2026\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
