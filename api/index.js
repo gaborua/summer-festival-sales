@@ -206,6 +206,38 @@ app.patch('/api/sales/:id/delivery', async (req, res) => {
     }
 });
 
+// Actualizar estado de retiro de tickets físicos
+app.patch('/api/sales/:id/pickup', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { tickets_picked_up } = req.body;
+
+        if (typeof tickets_picked_up !== 'boolean') {
+            return res.status(400).json({ error: 'El campo tickets_picked_up debe ser booleano' });
+        }
+
+        const { data, error } = await supabase
+            .from('sales')
+            .update({ tickets_picked_up })
+            .eq('id', id)
+            .select();
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            return res.status(404).json({ error: 'Venta no encontrada' });
+        }
+
+        res.json({
+            success: true,
+            message: 'Estado de retiro de tickets actualizado',
+            data: data[0]
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message || 'Error interno del servidor' });
+    }
+});
+
 // Para desarrollo local
 if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 3000;
