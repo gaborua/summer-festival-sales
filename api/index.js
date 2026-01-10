@@ -91,7 +91,7 @@ app.get('/api/stats', async (req, res) => {
 // Registrar nueva venta
 app.post('/api/sales', upload.single('receipt'), async (req, res) => {
     try {
-        const { team_leader, rrpp_name, ticket_quantity, city } = req.body;
+        const { team_leader, rrpp_name, ticket_quantity, city, event_name } = req.body;
 
         if (!team_leader || !rrpp_name || !ticket_quantity) {
             return res.status(400).json({ error: 'Todos los campos son obligatorios' });
@@ -101,6 +101,11 @@ app.post('/api/sales', upload.single('receipt'), async (req, res) => {
         const cityValue = (typeof city === 'string' && city.trim().length > 0)
             ? city.trim()
             : 'General';
+
+        // Evento: si no viene, usar 'Año Nuevo 2026' para compatibilidad con registros antiguos
+        const eventValue = (typeof event_name === 'string' && event_name.trim().length > 0)
+            ? event_name.trim()
+            : 'Año Nuevo 2026';
 
         let receiptFilename = null;
         if (req.file) {
@@ -151,6 +156,7 @@ app.post('/api/sales', upload.single('receipt'), async (req, res) => {
                 rrpp_name,
                 ticket_quantity: parseInt(ticket_quantity),
                 city: cityValue,
+                event_name: eventValue,
                 receipt_filename: receiptFilename
             }])
             .select();
