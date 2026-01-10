@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,53 +11,63 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: linear-gradient(135deg, #E91E63 0%, #880E4F 50%, #4A148C 100%);
             min-height: 100vh;
             padding: 20px;
         }
+
         .container {
             max-width: 600px;
             margin: 0 auto;
         }
+
         header {
             text-align: center;
             color: white;
             margin-bottom: 30px;
         }
+
         .logo {
             font-size: 3.5rem;
             font-weight: 900;
             letter-spacing: 3px;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             margin-bottom: 5px;
         }
+
         .subtitle {
             font-size: 1.1rem;
             font-weight: 600;
             opacity: 0.95;
         }
+
         .date {
             font-size: 0.9rem;
             opacity: 0.85;
             margin-top: 5px;
         }
+
         .card {
             background: white;
             padding: 35px;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
+
         h2 {
             color: #E91E63;
             font-size: 1.5rem;
             margin-bottom: 25px;
             text-align: center;
         }
+
         .form-group {
             margin-bottom: 20px;
         }
+
         label {
             display: block;
             margin-bottom: 8px;
@@ -64,7 +75,9 @@
             color: #333;
             font-size: 0.95rem;
         }
-        input, select {
+
+        input,
+        select {
             width: 100%;
             padding: 14px 16px;
             border: 2px solid #f0f0f0;
@@ -73,12 +86,14 @@
             transition: all 0.3s;
             background: #fafafa;
         }
+
         input:focus {
             outline: none;
             border-color: #E91E63;
             background: white;
             box-shadow: 0 0 0 4px rgba(233, 30, 99, 0.1);
         }
+
         .qr-section {
             background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%);
             padding: 25px;
@@ -86,26 +101,30 @@
             margin-bottom: 25px;
             text-align: center;
         }
+
         .qr-title {
             color: white;
             font-size: 1.2rem;
             font-weight: 700;
             margin-bottom: 15px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
+
         .qr-container {
             background: white;
             padding: 20px;
             border-radius: 12px;
             display: inline-block;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
+
         .qr-image {
             width: 280px;
             height: auto;
             display: block;
             border-radius: 8px;
         }
+
         .qr-placeholder {
             width: 200px;
             height: 200px;
@@ -119,22 +138,27 @@
             color: #666;
             font-weight: 600;
         }
+
         .qr-placeholder p {
             margin-top: 10px;
         }
+
         .qr-info {
             color: white;
             font-size: 0.9rem;
             margin-top: 15px;
             opacity: 0.95;
         }
+
         .file-input-wrapper {
             position: relative;
             overflow: hidden;
         }
+
         input[type="file"] {
             cursor: pointer;
         }
+
         button {
             width: 100%;
             padding: 18px;
@@ -150,15 +174,18 @@
             letter-spacing: 1px;
             box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
         }
+
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(233, 30, 99, 0.5);
         }
+
         button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
+
         .message {
             margin-top: 20px;
             padding: 16px;
@@ -167,30 +194,37 @@
             display: none;
             font-weight: 600;
         }
+
         .message.show {
             display: block;
         }
+
         .message.success {
             background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
             color: white;
         }
+
         .message.error {
             background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
             color: white;
         }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
             }
+
             .logo {
                 font-size: 2.5rem;
             }
+
             .card {
                 padding: 25px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -209,7 +243,7 @@
                 <a href="/la-paz.html" style="margin:0 6px;color:#E91E63;font-weight:800;">La Paz</a>
                 <a href="/sucre.html" style="margin:0 6px;color:#E91E63;font-weight:800;">Sucre</a>
             </div>
-            
+
             <form id="salesForm">
                 <div class="form-group">
                     <label for="teamLeader">👤 Team Leader *</label>
@@ -252,13 +286,18 @@
     </div>
 
     <script>
+        // Usar backend local si estamos en localhost, o la ruta relativa en producción
+        const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+            ? 'http://localhost:3000/api'
+            : '/api';
+
         const form = document.getElementById('salesForm');
         const message = document.getElementById('message');
         const submitBtn = document.getElementById('submitBtn');
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Registrando...';
 
@@ -269,7 +308,7 @@
             formData.append('receipt', document.getElementById('receipt').files[0]);
 
             try {
-                const response = await fetch('/api/sales', {
+                const response = await fetch(API_BASE + '/sales', {
                     method: 'POST',
                     body: formData
                 });
@@ -295,4 +334,5 @@
         });
     </script>
 </body>
+
 </html>
