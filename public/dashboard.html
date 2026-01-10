@@ -39,7 +39,7 @@
 
         .table-wrap{overflow:auto;max-height:66vh;border-radius:12px}
         table{width:100%;border-collapse:separate;border-spacing:0;background:#fff}
-        col.id{width:70px} col.city{width:140px} col.tickets{width:110px} col.receipt{width:190px} col.date{width:190px}
+        col.id{width:70px} col.city{width:140px} col.tickets{width:110px} col.receipt{width:190px} col.date{width:190px} col.pickup{width:130px}
         thead th{position:sticky;top:0;z-index:1;background:linear-gradient(135deg,var(--pink) 0%, var(--magenta) 100%);color:white}
         th,td{padding:14px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:1rem}
         tbody tr:hover{background:var(--row-alt)}
@@ -102,6 +102,7 @@
                     <col class="tickets" />
                     <col class="receipt" />
                     <col class="date" />
+                    <col class="pickup" />
                 </colgroup>
                 <thead>
                     <tr>
@@ -112,10 +113,11 @@
                         <th>Tickets</th>
                         <th>Comprobante</th>
                         <th>Fecha</th>
+                        <th>Retiro</th>
                     </tr>
                 </thead>
                 <tbody id="salesTable">
-                    <tr><td colspan="7" style="text-align:center; padding:40px;">Cargando ventas...</td></tr>
+                    <tr><td colspan="8" style="text-align:center; padding:40px;">Cargando ventas...</td></tr>
                 </tbody>
             </table>
             </div>
@@ -163,7 +165,7 @@
         function renderTable(sales) {
             const tbody = document.getElementById('salesTable');
             if (!Array.isArray(sales) || sales.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="empty">No hay ventas registradas</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="empty">No hay ventas registradas</td></tr>';
                     return;
                 }
 
@@ -176,15 +178,23 @@
                     <td class="num"><span class="pill pill-count">${sale.ticket_quantity}</span></td>
                     <td>${sale.receipt_url ? `<a class="link" href="${sale.receipt_url}" target="_blank" rel="noopener">📷 Ver comprobante</a>` : '<span style="color:#888">Sin comprobante</span>'}</td>
                         <td>${new Date(sale.created_at).toLocaleString('es')}</td>
+                        <td style="text-align:center">
+                            <input
+                                type="checkbox"
+                                ${sale.tickets_picked_up ? 'checked' : ''}
+                                onchange="togglePickup(${sale.id}, this.checked)"
+                                style="width:20px;height:20px;cursor:pointer;accent-color:var(--pink)"
+                            />
+                        </td>
                     </tr>
                 `).join('');
         }
 
         function exportCSV() {
             const sales = currentSales.length ? currentSales : allSales;
-            let csv = 'ID,Líder,RRPP,Ciudad,Tickets,ComprobanteURL,Fecha\n';
+            let csv = 'ID,Líder,RRPP,Ciudad,Tickets,ComprobanteURL,Fecha,TicketsRetirados\n';
             sales.forEach(sale => {
-                csv += `${sale.id},"${sale.team_leader}","${sale.rrpp_name}","${sale.city || ''}",${sale.ticket_quantity},"${sale.receipt_url || ''}","${new Date(sale.created_at).toLocaleString('es')}"\n`;
+                csv += `${sale.id},"${sale.team_leader}","${sale.rrpp_name}","${sale.city || ''}",${sale.ticket_quantity},"${sale.receipt_url || ''}","${new Date(sale.created_at).toLocaleString('es')}","${sale.tickets_picked_up ? 'Sí' : 'No'}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
@@ -213,6 +223,34 @@
             const select = document.getElementById('cityFilter');
             const cities = Array.from(new Set(sales.map(s => s.city || 'General'))).sort((a,b)=>a.localeCompare(b));
             select.innerHTML = '<option value="">Todas las ciudades</option>' + cities.map(c=>`<option value="${c}">${c}</option>`).join('');
+        }
+
+        async function togglePickup(saleId, isChecked) {
+            try {
+                const response = await fetch(`/api/sales/${saleId}/pickup`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ tickets_picked_up: isChecked })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al actualizar');
+                }
+
+                // Actualizar el estado local sin recargar toda la tabla
+                const saleIndex = allSales.findIndex(s => s.id === saleId);
+                if (saleIndex !== -1) {
+                    allSales[saleIndex].tickets_picked_up = isChecked;
+                }
+            } catch (error) {
+                console.error('Error al actualizar estado de retiro:', error);
+                alert('Error al actualizar el estado: ' + error.message);
+                // Revertir el checkbox en caso de error
+                loadData();
+            }
         }
 
         function refresh() { loadData(); }
