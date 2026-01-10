@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Principal - Summer Events</title>
+    <style>
+        :root {
+            --pink: #E91E63;
+            --magenta: #C2185B;
+            --purple: #4A148C;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --info: #2196F3;
+            --danger: #f44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 17px;
+            line-height: 1.45;
+            color: #222;
+            background: radial-gradient(1200px 800px at 20% 10%, #ff6ea133 0%, rgba(255,110,161,0) 70%),
+                        linear-gradient(135deg, var(--pink) 0%, #880E4F 50%, var(--purple) 100%);
+            min-height: 100vh;
+            padding: 32px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 3.8rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-shadow: 0 8px 28px rgba(0,0,0,.4);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            font-weight: 700;
+            opacity: .95;
+            letter-spacing: 1px;
+        }
+
+        /* Módulos Grid */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .module-card {
+            background: #ffffff;
+            padding: 32px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.30);
+            text-align: center;
+            transition: transform .3s, box-shadow .3s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 28px 80px rgba(0,0,0,.40);
+            border-color: var(--pink);
+        }
+
+        .module-icon {
+            font-size: 3.5rem;
+            margin-bottom: 16px;
+        }
+
+        .module-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: var(--pink);
+            margin-bottom: 8px;
+        }
+
+        .module-description {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .module-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--pink) 0%, var(--magenta) 100%);
+            color: white;
+            font-weight: 900;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: transform .2s;
+        }
+
+        .module-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Resumen Financiero */
+        .financial-summary {
+            background: #ffffff;
+            padding: 32px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.30);
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--pink);
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 24px;
+            border-radius: 16px;
+            border: 2px solid #f0f0f0;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 2.4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--pink) 0%, var(--magenta) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-value.positive {
+            background: linear-gradient(135deg, var(--success) 0%, #2e7d32 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-value.neutral {
+            background: linear-gradient(135deg, var(--info) 0%, #1565c0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Eventos Activos */
+        .events-section {
+            background: #ffffff;
+            padding: 32px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.30);
+        }
+
+        .event-card {
+            background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+            padding: 24px;
+            border-radius: 16px;
+            border-left: 5px solid var(--pink);
+            margin-bottom: 20px;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .event-card:hover {
+            transform: translateX(8px);
+            box-shadow: 0 12px 32px rgba(0,0,0,.15);
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .event-name {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #222;
+        }
+
+        .event-status {
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .event-status.activo {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 2px solid #4caf50;
+        }
+
+        .event-status.finalizado {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 2px solid #2196f3;
+        }
+
+        .event-status.planificacion {
+            background: #fff3e0;
+            color: #e65100;
+            border: 2px solid #ff9800;
+        }
+
+        .event-details {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .event-detail {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .event-detail strong {
+            color: #222;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.8rem;
+            }
+
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .event-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">🎉 SUMMER EVENTS</div>
+            <div class="subtitle">Sistema Integral de Gestión de Eventos</div>
+        </header>
+
+        <!-- Módulos del Sistema -->
+        <div class="modules-grid">
+            <div class="module-card" onclick="window.location.href='dashboard/sales-teams.html'">
+                <div class="module-icon">💰</div>
+                <div class="module-title">Ventas por Equipos</div>
+                <div class="module-description">Gestión de ventas grupales y RRPPs</div>
+                <a href="dashboard/sales-teams.html" class="module-btn">Ir al módulo →</a>
+            </div>
+
+            <div class="module-card" onclick="window.location.href='dashboard/sales-individual.html'">
+                <div class="module-icon">👤</div>
+                <div class="module-title">Ventas Individuales</div>
+                <div class="module-description">Registro directo de clientes finales</div>
+                <a href="dashboard/sales-individual.html" class="module-btn">Ir al módulo →</a>
+            </div>
+
+            <div class="module-card" onclick="window.location.href='dashboard/expenses.html'">
+                <div class="module-icon">💸</div>
+                <div class="module-title">Gastos</div>
+                <div class="module-description">Control de gastos y aprobaciones</div>
+                <a href="dashboard/expenses.html" class="module-btn">Ir al módulo →</a>
+            </div>
+
+            <div class="module-card" onclick="window.location.href='dashboard/calculator.html'">
+                <div class="module-icon">🧮</div>
+                <div class="module-title">Calculadora</div>
+                <div class="module-description">Proyecciones y análisis financiero</div>
+                <a href="dashboard/calculator.html" class="module-btn">Ir al módulo →</a>
+            </div>
+        </div>
+
+        <!-- Resumen Financiero -->
+        <div class="financial-summary">
+            <h2 class="section-title">📊 Resumen Financiero General</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Ingresos</div>
+                    <div class="stat-value positive" id="totalIncome">Bs. 63,000</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Gastos</div>
+                    <div class="stat-value neutral" id="totalExpenses">Bs. 18,500</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Balance Neto</div>
+                    <div class="stat-value positive" id="netBalance">Bs. 44,500</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Tickets</div>
+                    <div class="stat-value" id="totalTickets">315</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Margen</div>
+                    <div class="stat-value positive" id="profitMargin">70.6%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Eventos Activos</div>
+                    <div class="stat-value" id="activeEvents">2</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eventos Activos -->
+        <div class="events-section">
+            <h2 class="section-title">🎯 Eventos en el Sistema</h2>
+
+            <!-- Evento 1 -->
+            <div class="event-card">
+                <div class="event-header">
+                    <div class="event-name">🎆 Año Nuevo 2026</div>
+                    <div class="event-status finalizado">Finalizado</div>
+                </div>
+                <div class="event-details">
+                    <div class="event-detail">
+                        📍 <strong>5 ciudades</strong>
+                    </div>
+                    <div class="event-detail">
+                        🎫 <strong>226 tickets</strong>
+                    </div>
+                    <div class="event-detail">
+                        💰 <strong>Bs. 45,200</strong>
+                    </div>
+                    <div class="event-detail">
+                        💸 Gastos: <strong>Bs. 15,300</strong>
+                    </div>
+                    <div class="event-detail">
+                        📈 Balance: <strong style="color: #4CAF50;">Bs. 29,900</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evento 2 -->
+            <div class="event-card">
+                <div class="event-header">
+                    <div class="event-name">🎭 Carnaval Summer 2026</div>
+                    <div class="event-status activo">En Curso</div>
+                </div>
+                <div class="event-details">
+                    <div class="event-detail">
+                        📍 <strong>3 ciudades</strong>
+                    </div>
+                    <div class="event-detail">
+                        🎫 <strong>89 tickets</strong>
+                    </div>
+                    <div class="event-detail">
+                        💰 <strong>Bs. 17,800</strong>
+                    </div>
+                    <div class="event-detail">
+                        💸 Gastos: <strong>Bs. 3,200</strong>
+                    </div>
+                    <div class="event-detail">
+                        📈 Balance: <strong style="color: #4CAF50;">Bs. 14,600</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evento 3 -->
+            <div class="event-card">
+                <div class="event-header">
+                    <div class="event-name">🎵 Festival Primavera 2026</div>
+                    <div class="event-status planificacion">Planificación</div>
+                </div>
+                <div class="event-details">
+                    <div class="event-detail">
+                        📍 <strong>2 ciudades</strong>
+                    </div>
+                    <div class="event-detail">
+                        🎫 <strong>0 tickets</strong>
+                    </div>
+                    <div class="event-detail">
+                        💰 <strong>Bs. 0</strong>
+                    </div>
+                    <div class="event-detail">
+                        📅 Fecha estimada: <strong>Marzo 2026</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cargar datos reales desde las APIs
+        async function loadDashboardData() {
+            try {
+                // Aquí irían las llamadas reales a tus APIs
+                // const [stats, events] = await Promise.all([
+                //     fetch('/api/stats/summary'),
+                //     fetch('/api/events?status=activo,finalizado')
+                // ]);
+
+                // Por ahora, mostrar datos de ejemplo
+                console.log('Dashboard cargado con datos de ejemplo');
+                console.log('Implementar llamadas a API en producción');
+
+                // Actualizar cada 30 segundos
+                setTimeout(loadDashboardData, 30000);
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+            }
+        }
+
+        // Cargar al iniciar
+        document.addEventListener('DOMContentLoaded', loadDashboardData);
+    </script>
+</body>
+</html>
