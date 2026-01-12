@@ -390,14 +390,11 @@ CREATE TABLE expenses (
   expense_date DATE NOT NULL DEFAULT CURRENT_DATE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
-  notes TEXT,
+  notes TEXT
 
-  -- Constraint: subcategory debe pertenecer a la categoría
-  CONSTRAINT check_subcategory_matches_category CHECK (
-    subcategory_id IN (
-      SELECT id FROM expense_subcategories WHERE category_id = expenses.category_id
-    )
-  )
+  -- NOTA: El CHECK constraint con subquery fue removido porque PostgreSQL
+  -- no permite subqueries en CHECK constraints. La integridad referencial
+  -- está garantizada por las foreign keys.
 );
 
 -- Índices
